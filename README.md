@@ -9,10 +9,10 @@
 - Allow travel agency to look for past 3 month daily safety score of an area, and give top 3 negative-impact events when looking into a certain day. 
 
 ## Dataset
-- GDELT dataset: over 2.5TB per year
+- GDELT dataset: ~ 2.5TB per year
 
 ## Engineering Challenge
 - Big data joins and query
 
 ## Tech Stack
-- S3 => Kafka => Spark => Redshift (=> Airflow) => Flask
+- S3 => Spark => PostgreSQL => Flask
