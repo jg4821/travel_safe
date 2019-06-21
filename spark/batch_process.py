@@ -9,43 +9,36 @@ class CalculateSafetyScore(object):
         self.spark = SparkSession \
                     .builder \
                     .appName('calculate-safety-score') \
-                    .config('spark.executor.memory', '6gb') \
+                    .config('spark.executor.memory', '6800mb') \
                     .getOrCreate()
         self.event_path = event_path
         self.mentions_path = mentions_path
         self.gkg_path = gkg_path
 
-    def read_parquet_from_s3(self, file_path):
-        # df = self.spark.read.schema(self.schema).parquet(self.file_path)
-        df = self.spark.read.parquet(file_path)
-        return df
-
     def calculate_score(self):
-        event_df = self.read_parquet_from_s3(self.event_path)
-        mentions_df = self.read_parquet_from_s3(self.mentions_path)
-        gkg_df = self.read_parquet_from_s3(self.gkg_path)
-
         # transform and filter data
-        event_df = event_df.withColumn('temp', event_df.GLOBALEVENTID.cast('INT')).drop('GLOBALEVENTID').withColumnRenamed('temp','GLOBALEVENTID')
-        event_df = event_df.withColumn('temp', event_df.GoldsteinScale.cast('FLOAT')).drop('GoldsteinScale').withColumnRenamed('temp','GoldsteinScale')
-        event_df = event_df.withColumn('country', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[2])))
-        event_df = event_df.withColumn('state', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[1])))
-        event_df = event_df.withColumn('city', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[0])))
-        event_df = event_df.select('GLOBALEVENTID', 'GoldsteinScale', 'country', 'state', 'city')
-        event_df.printSchema()
+        mentions_df = self.spark.read.parquet(self.mentions_path).select('GLOBALEVENTID', 'MentionTimeDate', 'MentionIdentifier', 'Confidence')
+        gkg_df = self.spark.read.parquet(self.gkg_path).select('DocumentIdentifier', 'Date', 'V2Tone')
 
-        mentions_df = mentions_df.withColumn('temp', mentions_df.GLOBALEVENTID.cast('INT')).drop('GLOBALEVENTID').withColumnRenamed('temp','GLOBALEVENTID')
-        mentions_df = mentions_df.withColumn('temp', mentions_df.Confidence.cast('INT')).drop('Confidence').withColumnRenamed('temp','Confidence')
-        mentions_df = mentions_df.withColumn('mDate', F.to_date(mentions_df.MentionTimeDate, format='yyyyMMddHHmmss'))
-        mentions_df = mentions_df.select('GLOBALEVENTID', 'MentionIdentifier', 'Confidence', 'mDate')
+        # filter rows on mention date in 2019
+        mentions_df = mentions_df.filter(mentions_df.MentionTimeDate.like('2019%'))
+        gkg_df = gkg_df.filter(gkg_df.Date.like('2019%'))
+        gkg_df = gkg_df.drop('Date')
+
+        # mentions_df = mentions_df.select('GLOBALEVENTID', 'MentionTimeDate', 'MentionIdentifier', 'Confidence')
+        mentions_df = mentions_df.withColumn('GLOBALEVENTID', mentions_df.GLOBALEVENTID.cast('INT')) #.drop('GLOBALEVENTID').withColumnRenamed('temp','GLOBALEVENTID')
+        mentions_df = mentions_df.withColumn('Confidence', mentions_df.Confidence.cast('INT')) #.drop('Confidence').withColumnRenamed('temp','Confidence')
+        mentions_df = mentions_df.withColumn('mDate', F.to_date(mentions_df.MentionTimeDate, format='yyyyMMddHHmmss')).drop('MentionTimeDate')
+        # mentions_df = mentions_df.select('GLOBALEVENTID', 'MentionIdentifier', 'Confidence', 'mDate')
         mentions_df.printSchema()
+        print(mentions_df.first())
 
-        gkg_df = gkg_df.withColumn('Tone', F.split(gkg_df.V2Tone, ',')[0].cast('FLOAT'))
-        gkg_df = gkg_df.select('DocumentIdentifier', 'Tone')
+        # gkg_df = gkg_df.select('DocumentIdentifier', 'V2Tone')
+        gkg_df = gkg_df.withColumn('Tone', F.split(gkg_df.V2Tone, ',')[0].cast('FLOAT')).drop('V2Tone')
         gkg_df.printSchema()
+        print(gkg_df.first())
 
         # register the DataFrame as a SQL temporary view
-        event_df.createOrReplaceTempView('event_table')
         mentions_df.createOrReplaceTempView('mentions_table')
         gkg_df.createOrReplaceTempView('gkg_table')
 
@@ -54,21 +47,51 @@ class CalculateSafetyScore(object):
                                 FROM mentions_table inner join gkg_table on mentions_table.MentionIdentifier = gkg_table.DocumentIdentifier \
                                 GROUP BY GLOBALEVENTID, mDate')
 
+        temp_df.explain()
         temp_df.printSchema()
+        print(temp_df.first())
 
         temp_df.createOrReplaceTempView('temp_table')
+
+        # clear cache of mentions and gkg df & table, read in event data
+        flg = self.spark.catalog.dropTempView('mentions_table')
+        print('DROP TEMP VIEW mentions_table: '+str(flg))
+        self.spark.catalog.dropTempView('gkg_table')
+        mentions_df.unpersist()
+        gkg_df.unpersist()
+
+
+        event_df = self.spark.read.parquet(self.event_path).select('GLOBALEVENTID', 'GoldsteinScale', 'ActionGeo_FullName')
+        # event_df = event_df.select('GLOBALEVENTID', 'GoldsteinScale', 'ActionGeo_FullName')
+        event_df = event_df.withColumn('GLOBALEVENTID', event_df.GLOBALEVENTID.cast('INT')) #.drop('GLOBALEVENTID').withColumnRenamed('temp','GLOBALEVENTID')
+        event_df = event_df.withColumn('GoldsteinScale', event_df.GoldsteinScale.cast('FLOAT')) #.drop('GoldsteinScale').withColumnRenamed('temp','GoldsteinScale')
+        event_df = event_df.withColumn('country', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[2])))
+        event_df = event_df.withColumn('state', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[1])))
+        event_df = event_df.withColumn('city', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[0]))).drop('ActionGeo_FullName')
+        event_df.printSchema()
+        print(event_df.first())
+
+        event_df.createOrReplaceTempView('event_table')
+
+        # compute final safety score
         result_df = self.spark.sql('SELECT event_table.GLOBALEVENTID, mDate, 0.5*(GoldsteinScale*10+temp_table.sentiment) as SafetyScore, numOfMentions, \
                                     country, state, city \
                             FROM event_table inner join temp_table on event_table.GLOBALEVENTID = temp_table.GLOBALEVENTID')
 
+        result_df.explain()
         result_df.printSchema()
+        print(result_df.first())
 
-        # temp_joined = mentions_df.join(gkg_df, mentions_df.MentionIdentifier==gkg_df.DocumentIdentifier, how='inner') \
-        #                         .groupBy(mentions_df.GLOBALEVENTID, mentions_df.mDate).agg()
+        # free up memory and disk
+        self.spark.catalog.dropTempView('temp_table')
+        self.spark.catalog.dropTempView('event_table')
+        temp_df.unpersist()
+        event_df.unpersist()
+
         return result_df
 
     def write_events_to_db(self, df):
-        table = 'safety_event'
+        table = 'safety_test'
         mode = 'append'
         
         connector = timescale.TimescaleConnector()
@@ -92,19 +115,6 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-# def transform_geo_fullname(self, geoName):
-#     geoName.split()
-
-# def squared(s):
-#   return s * s
-# spark.udf.register("squaredWithPython", squared)
-
-# df.createOrReplaceTempView("people")
-# sqlDF = spark.sql("SELECT * FROM people")
-# sqlDF.show()
 
 
 
