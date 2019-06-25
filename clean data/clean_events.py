@@ -5,12 +5,7 @@ from pyspark.sql.types import StringType, DoubleType, IntegerType
 from pyspark.sql import SparkSession
 import configparser
 import os
-# from pyspark.sql.functions import udf
-# from pyspark.sql.functions import col
-# from abbreviations_dict import tofullname, toevent
-# from operator import itemgetter
-# from pyspark import StorageLevel
-# import pyspark_cassandra
+
 
 def main():
 	# get aws credentials for accessing S3
