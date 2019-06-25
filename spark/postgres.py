@@ -1,7 +1,7 @@
 from pyspark.sql import DataFrameWriter
 import os
 
-class TimescaleConnector(object):
+class PostgresConnector(object):
     def __init__(self):
         self.database = 'travelsafepostgres'
         self.host = 'ec2-34-220-15-124.us-west-2.compute.amazonaws.com'
