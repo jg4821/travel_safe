@@ -1,0 +1,67 @@
+{% extends "index.html" %}
+
+{% block graph %}
+
+<div class="chart" id="bargraph" style="margin-top: 10px">
+</div>
+
+
+<div class="row" style="margin-top: 10px">
+    <div class="form-group col-md-3">
+        <label for="date">Date</label>
+        <div class="input-group date">
+            <div class="input-group-addon">
+                <i class="fa fa-calendar"></i>
+            </div>
+            <input class="form-control" id="date" name="date" placeholder="MM/DD/YYYY" type="text"/>
+        </div>
+    </div>
+    <div class="form-group col-md-3" style="margin-top: 25px">
+        <label></label>
+        <button type="button" id="event_btn" class="btn btn-primary">Submit</button>
+    </div>
+</div>
+
+
+<div id="top_events_url" style="margin-top: 10px">
+
+</div>
+
+<script type="text/javascript">
+    // var myPlot = document.getElementById('bargraph')
+    var graphs = {{plot | safe}};
+    Plotly.plot('bargraph',graphs,{});
+    // myPlot.on('plotly_click', function(){
+    //     alert('You clicked this Plotly chart!');
+    // });
+
+    var dates = {{ remove_dates | tojson }};
+
+    $("#date").datepicker({
+        format: "yyyy-mm-dd",
+        startView: 1,
+        // maxViewMode: 1,
+        // minViewMode: 1,
+        autoclose: true,
+        startDate: "2019-04-01",
+        endDate: "2019-06-27",
+        datesDisabled: dates
+    });
+
+    var top_event = {{ data | tojson }};
+
+    $("#event_btn").on('click', function() {
+        var picked_date = $("#date").val()
+        var newHTML = '<b>Top 3 least safe events: </b><br />';
+        for (var i=0; i<top_event.length; i++) {
+            var row_event = top_event[i].split(',');
+            if (row_event[1] == picked_date) {
+                var url_str = row_event[4];
+                var url = url_str.link(url_str)
+                newHTML += 'Event ID: '+row_event[0]+', Safety Level: '+row_event[2]+', Link: '+url+'<br />';
+            }
+        }
+        document.getElementById('top_events_url').innerHTML = newHTML;
+    });
+</script>
+{% endblock graph %}}
