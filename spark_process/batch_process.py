@@ -4,6 +4,9 @@ from pyspark.sql.functions import udf
 import postgres
 
 
+''' This class performs computation of the comprehensive safety level of each event 
+    with regard to every news mention about the event on that day. 
+'''
 class CalculateSafetyScore(object):
     def __init__(self, event_path, mentions_path, gkg_path):
         self.spark = SparkSession \
@@ -25,15 +28,13 @@ class CalculateSafetyScore(object):
         gkg_df = gkg_df.filter(gkg_df.Date.like('2019%'))
         gkg_df = gkg_df.drop('Date')
 
-        # mentions_df = mentions_df.select('GLOBALEVENTID', 'MentionTimeDate', 'MentionIdentifier', 'Confidence')
-        mentions_df = mentions_df.withColumn('GLOBALEVENTID', mentions_df.GLOBALEVENTID.cast('INT')) #.drop('GLOBALEVENTID').withColumnRenamed('temp','GLOBALEVENTID')
-        mentions_df = mentions_df.withColumn('Confidence', mentions_df.Confidence.cast('INT')) #.drop('Confidence').withColumnRenamed('temp','Confidence')
+        # type casting for mentions and gkg df
+        mentions_df = mentions_df.withColumn('GLOBALEVENTID', mentions_df.GLOBALEVENTID.cast('INT'))
+        mentions_df = mentions_df.withColumn('Confidence', mentions_df.Confidence.cast('INT'))
         mentions_df = mentions_df.withColumn('mDate', F.to_date(mentions_df.MentionTimeDate, format='yyyyMMddHHmmss')).drop('MentionTimeDate')
-        # mentions_df = mentions_df.select('GLOBALEVENTID', 'MentionIdentifier', 'Confidence', 'mDate')
         mentions_df.printSchema()
         print(mentions_df.first())
 
-        # gkg_df = gkg_df.select('DocumentIdentifier', 'V2Tone')
         gkg_df = gkg_df.withColumn('Tone', F.split(gkg_df.V2Tone, ',')[0].cast('FLOAT')).drop('V2Tone')
         gkg_df.printSchema()
         print(gkg_df.first())
@@ -54,17 +55,15 @@ class CalculateSafetyScore(object):
         temp_df.createOrReplaceTempView('temp_table')
 
         # clear cache of mentions and gkg df & table, read in event data
-        flg = self.spark.catalog.dropTempView('mentions_table')
-        print('DROP TEMP VIEW mentions_table: '+str(flg))
+        self.spark.catalog.dropTempView('mentions_table')
         self.spark.catalog.dropTempView('gkg_table')
         mentions_df.unpersist()
         gkg_df.unpersist()
 
-
+        # load event data and perform join and aggregation
         event_df = self.spark.read.parquet(self.event_path).select('GLOBALEVENTID', 'GoldsteinScale', 'ActionGeo_FullName')
-        # event_df = event_df.select('GLOBALEVENTID', 'GoldsteinScale', 'ActionGeo_FullName')
-        event_df = event_df.withColumn('GLOBALEVENTID', event_df.GLOBALEVENTID.cast('INT')) #.drop('GLOBALEVENTID').withColumnRenamed('temp','GLOBALEVENTID')
-        event_df = event_df.withColumn('GoldsteinScale', event_df.GoldsteinScale.cast('FLOAT')) #.drop('GoldsteinScale').withColumnRenamed('temp','GoldsteinScale')
+        event_df = event_df.withColumn('GLOBALEVENTID', event_df.GLOBALEVENTID.cast('INT'))
+        event_df = event_df.withColumn('GoldsteinScale', event_df.GoldsteinScale.cast('FLOAT'))
         event_df = event_df.withColumn('country', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[2])))
         event_df = event_df.withColumn('state', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[1])))
         event_df = event_df.withColumn('city', F.rtrim(F.ltrim(F.split(event_df.ActionGeo_FullName, ',')[0]))).drop('ActionGeo_FullName')
@@ -91,7 +90,7 @@ class CalculateSafetyScore(object):
         return result_df
 
     def write_events_to_db(self, df):
-        table = 'safety_test'
+        table = 'safety_score'
         mode = 'append'
         
         connector = postgres.PostgresConnector()
