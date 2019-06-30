@@ -1,10 +1,10 @@
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SQLContext
 from pyspark.sql.types import *
-from pyspark.sql.types import StringType, DoubleType, IntegerType
 from pyspark.sql import SparkSession
 import configparser
 import os
+import schema
 
 
 def main():
@@ -22,23 +22,7 @@ def main():
     hadoop_conf.set('fs.s3n.awsSecretAccessKey', access_key)
     sqlContext = SQLContext(sc)
 
-    mentionsSchema =  StructType([
-            StructField('GLOBALEVENTID',StringType(),True),
-            StructField('EventTimeDate',StringType(),True),
-            StructField('MentionTimeDate',StringType(),True),
-            StructField('MentionType',StringType(),True),
-            StructField('MentionSourceName',StringType(),True),
-            StructField('MentionIdentifier',StringType(),True),
-            StructField('SentenceID',StringType(),True),
-            StructField('Actor1CharOffset',StringType(),True),
-            StructField('Actor2CharOffset',StringType(),True),
-            StructField('ActionCharOffset',StringType(),True),
-            StructField('InRawText',StringType(),True),
-            StructField('Confidence',StringType(),True),
-            StructField('MentionDocLen',StringType(),True),
-            StructField('MentionDocTone',StringType(),True),
-            StructField('MentionDocTranslationInfo',StringType(),True),
-            StructField('Extras',StringType(),True)])
+    mentionsSchema = schema.GDELTDataSchema().getMentionSchema()
 
     df = sqlContext.read \
         .format('com.databricks.spark.csv') \
