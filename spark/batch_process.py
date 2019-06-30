@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.functions import udf
-import timescale
+import postgres
 
 
 class CalculateSafetyScore(object):
@@ -94,7 +94,7 @@ class CalculateSafetyScore(object):
         table = 'safety_test'
         mode = 'append'
         
-        connector = timescale.TimescaleConnector()
+        connector = postgres.PostgresConnector()
         connector.write_to_db(df, table, mode)
 
     def run(self):

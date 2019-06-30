@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.types import StringType, DoubleType, IntegerType
-import timescale
+import postgres
 
 class ImportEventsToDB(object):
     def __init__(self, file_path):
@@ -161,7 +161,7 @@ class ImportEventsToDB(object):
         table = 'events'
         mode = 'append'
         
-        connector = timescale.TimescaleConnector()
+        connector = postgres.PostgresConnector()
         connector.write_to_db(df, table, mode)
 
     def run(self):
