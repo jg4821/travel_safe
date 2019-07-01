@@ -97,10 +97,6 @@ def city(country,state):
         cityArray.append(cityObj)
     return jsonify({'cities' : cityArray})
 
-@app.route("/about")
-def about():
-    return render_template("about.html")
-
 
 
 def parse_date(date):
