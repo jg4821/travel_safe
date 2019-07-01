@@ -1,18 +1,17 @@
-# Travel Safe
+# Travel Informed
 
-## Business Case
-- Travel agency needs to assure present or near-present destination safety before planning and marketing their itinerary. 
-- Safety score based on events happened in different areas around the globe gives direct and general indication of area safety level. 
+## Background
+In 2018, the global Travel & Tourism sector grew at 3.9% to contribute a record $8.8 trillion and 319 million jobs to the world economy, and generated 10.4% of all global economic activity, according to the World Travel & Tourism Council’s (WTTC) annual research. The safety level of a country directly affects the travel business. For instance, in Colombia, decrease in crime level saw 10.7% increase of travelers. Conversely, in Venezuela, increase of crimes led to 7.2% drop of travelers. Travel agents, as well as travelers, must assure destination safety before making recommendations to clients or planning their next wonderful trip. 
 
-## Idea
-- Incorporate information from GDELT events, eventmentions, global knowledge graph to provide safety score of an area. 
-- Allow travel agency to look for past 3 month daily safety score of an area, and give top 3 negative-impact events when looking into a certain day. 
+## Project Overview
+This project provides a platform for travel agents and travelers to get up-to-date information on global cities. It incorporates real-time news information from Global Database of Events, Language and Tone (GDELT), aggregates every news mention about a event to provide a direct and inclusive representation of safety level of a city. 
 
 ## Dataset
-- GDELT dataset: ~ 2.5TB per year
-
-## Engineering Challenge
-- Big data joins and query
+[GDELT dataset](https://www.gdeltproject.org/data.html#rawdatafiles): ~ 2.5TB per year
 
 ## Tech Stack
-- S3 => Spark => PostgreSQL => Flask
+![tech_stack](https://user-images.githubusercontent.com/32504091/60420177-eb370b00-9b9b-11e9-9ae1-bc683f39efcc.png)
+
+## Engineering Challenge
+- Large table joins with O(n<sup>3</sup>) complexity
+- New coming and backfill data handling
