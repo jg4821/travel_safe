@@ -29,8 +29,8 @@ sudo apt install openssh-server openssh-client
 cd ./.ssh/
 ssh-keygen -t rsa -P ""
 ```
-enter: id_rsa
-copy id_rsa.pub to all worker nodes under ~/.ssh/authorized_keys
+- enter: id_rsa
+- copy id_rsa.pub to all worker nodes under ~/.ssh/authorized_keys
 
 ## Install Spark
 ```bash
@@ -39,9 +39,9 @@ tar xvf spark-2.4.3-bin-hadoop2.7.tgz
 sudo mv spark-2.4.3-bin-hadoop2.7/ /usr/local/spark
 export PATH=/usr/local/spark/bin:$PATH
 ```
-Test if working fine:
-```sh /usr/local/spark/sbin/start-all.sh```
-To stop: 
+Test if working fine:       
+```sh /usr/local/spark/sbin/start-all.sh```     
+To stop:        
 ```sbin/stop-all.sh```
 
 ## Install PostgreSQL
