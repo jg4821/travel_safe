@@ -36,6 +36,8 @@
     // });
 
     var dates = {{ remove_dates | tojson }};
+    var start_d = {{ start_date | tojson }};
+    var end_d = {{ end_date | tojson }};
 
     $("#date").datepicker({
         format: "yyyy-mm-dd",
@@ -43,8 +45,8 @@
         // maxViewMode: 1,
         // minViewMode: 1,
         autoclose: true,
-        startDate: "2019-04-01",
-        endDate: "2019-06-27",
+        startDate: start_d[0],
+        endDate: end_d[0],
         datesDisabled: dates
     });
 

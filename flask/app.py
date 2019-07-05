@@ -54,7 +54,7 @@ def index():
                     Y group by "mDate" order by "mDate" ASC'''.format(form.country.data,form.state.data,form.city.data,start_date_str,end_date_str)
         result = engine.execute(sql_query).fetchall()
         title = ''+form.city.data+', '+form.state.data+', '+form.country.data
-        bar, remove_date_list = create_plot(result, title, max_date[0][0])
+        bar, remove_date_list, start_d, end_d = create_plot(result, title, max_date[0][0])
 
         top_events_query = '''select top_events.*, events."SOURCEURL" \
                         from (select rank_filter.* from (select *, \
@@ -67,7 +67,7 @@ def index():
                         on top_events."GLOBALEVENTID"=events."GLOBALEVENTID"'''.format(form.country.data,form.state.data,form.city.data,start_date_str,end_date_str)
         top_events = engine.execute(top_events_query).fetchall()
         parsed_events = parse_events(top_events, max_date[0][0])
-        return render_template('graph.html', form=form, plot=bar, remove_dates=remove_date_list, data=parsed_events)
+        return render_template('graph.html', form=form, plot=bar, remove_dates=remove_date_list, data=parsed_events, start_date=start_d, end_date=end_d)
 
     return render_template('index.html', form=form)
 
@@ -123,6 +123,9 @@ def create_plot(result, title, end_date):
     date_list = [base - datetime.timedelta(days=x) for x in range(0, numdays)][::-1]
     remove_list = copy.deepcopy(date_list)
 
+    start_d = [date_list[0].strftime('%Y-%m-%d')]
+    end_d = [date_list[-1].strftime('%Y-%m-%d')]
+
     y_modified = [0]*numdays
     diff = base - end_date
     for ind in range(len(x)):
@@ -148,7 +151,7 @@ def create_plot(result, title, end_date):
             )
 
     graphJSON = json.dumps(graph, cls=plotly.utils.PlotlyJSONEncoder)
-    return graphJSON, remove_list
+    return graphJSON, remove_list, start_d, end_d
 
 
 
