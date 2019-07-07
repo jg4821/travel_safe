@@ -15,3 +15,6 @@ This project provides a platform for travel agents and travelers to get up-to-da
 ## Engineering Challenge
 - Large table joins with O(n<sup>3</sup>) complexity
 - New coming and backfill data handling
+
+## Environment Setup
+See [`setup.md`](https://github.com/jg4821/travel_safe/blob/master/setup.md) for detailed setup instructions. 
