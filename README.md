@@ -14,11 +14,11 @@ This project provides a platform for travel agents and travelers to get up-to-da
 ![tech_stack](https://user-images.githubusercontent.com/32504091/60420177-eb370b00-9b9b-11e9-9ae1-bc683f39efcc.png)
 
 ## Engineering Challenge
-1. Large table joins with O(n<sup>3</sup>) complexity
+1. Large table joins with O(n<sup>3</sup>) complexity   
 **Solution**: 
 - Shuffle sort merge join with O(n<sup>2</sup>) for 2 tables first. 
 - Data spills to disk when memory is not sufficient. 
-2. New coming and backfill data handling
+2. New coming and backfill data handling    
 **Solution**: 
 - Join new coming daily data with entire *Events* table to prevent data loss. 
 
@@ -26,4 +26,4 @@ This project provides a platform for travel agents and travelers to get up-to-da
 See [`setup.md`](https://github.com/jg4821/travel_safe/blob/master/setup.md) for detailed setup instructions. 
 
 ## Demo | PPT | Presentation
-[Demo](https://youtu.be/PYsHADL7Fls) | [PPT](https://docs.google.com/presentation/d/1PD4DRXdco5yCEPbK56mSEmU59p6aPnkLKXg063XkGec/edit?usp=sharing) |[Presentation](https://youtu.be/HB_7LwliSy8)
+[Demo](https://youtu.be/PYsHADL7Fls) | [PPT](https://docs.google.com/presentation/d/1PD4DRXdco5yCEPbK56mSEmU59p6aPnkLKXg063XkGec/edit?usp=sharing) | [Presentation](https://youtu.be/HB_7LwliSy8)
