@@ -17,12 +17,12 @@ This project provides a platform for travel agents and travelers to get up-to-da
 1. Large table joins with O(n<sup>3</sup>) complexity   
 
 **Solution**: 
-    - Shuffle sort merge join with O(n<sup>2</sup>) for 2 tables first. 
-    - Data spills to disk when memory is not sufficient. 
+- Shuffle sort merge join with O(n<sup>2</sup>) for 2 tables first. 
+- Data spills to disk when memory is not sufficient. 
 2. New coming and backfill data handling    
 
 **Solution**: 
-    - Join new coming daily data with entire *Events* table to prevent data loss. 
+- Join new coming daily data with entire *Events* table to prevent data loss. 
 
 ## Environment Setup
 See [`setup.md`](https://github.com/jg4821/travel_safe/blob/master/setup.md) for detailed setup instructions. 
